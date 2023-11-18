@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Filters a log line."""
 import logging
+from mysql.connector import connection
+import os
 import re
 
 from datetime import datetime
@@ -52,3 +54,15 @@ class RedactingFormatter(logging.Formatter):
             "asctime": asctime, "message": filtered_message
         }
         return self.FORMAT % values
+
+
+def get_db():
+    """Returns a database connection."""
+    config = {
+        'user': os.getenv('PERSONAL_DATA_DB_USERNAME'),
+        'password': os.getenv('PERSONAL_DATA_DB_PASSWORD'),
+        'host': os.getenv('PERSONAL_DATA_DB_HOST'),
+        'db': os.getenv('PERSONAL_DATA_DB_NAME')
+    }
+
+    return connection.MySQLConnection(**config)
