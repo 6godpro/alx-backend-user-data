@@ -68,6 +68,7 @@ def get_db():
 
 
 def main():
+    """Retrieve users and displays in a filtered format."""
     db = get_db()
 
     cursor = db.cursor(dictionary=True)
