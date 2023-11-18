@@ -85,4 +85,5 @@ def main():
         print(formatter.format(log_record))
 
 
-main()
+if __name__ == "__main__":
+    main()
