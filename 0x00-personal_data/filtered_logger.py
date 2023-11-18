@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import List
 
 
-def filter_datum(fields: List,
+def filter_datum(fields: List[str],
                  redaction: str,
                  message: str,
                  separator: str) -> str:
@@ -27,7 +27,6 @@ def filter_datum(fields: List,
     """
     for field in fields:
         pattern: str = r'{}=([^{}]+)'.format(field, separator)
-        print(pattern)
         replacement: str = '{}={}'.format(field, redaction)
         message = re.sub(pattern, replacement, message)
     return message
@@ -59,10 +58,31 @@ class RedactingFormatter(logging.Formatter):
 def get_db():
     """Returns a database connection."""
     config = {
-        'user': os.getenv('PERSONAL_DATA_DB_USERNAME'),
-        'password': os.getenv('PERSONAL_DATA_DB_PASSWORD'),
-        'host': os.getenv('PERSONAL_DATA_DB_HOST'),
+        'user': os.getenv('PERSONAL_DATA_DB_USERNAME', 'root'),
+        'password': os.getenv('PERSONAL_DATA_DB_PASSWORD', ''),
+        'host': os.getenv('PERSONAL_DATA_DB_HOST', 'localhost'),
         'db': os.getenv('PERSONAL_DATA_DB_NAME')
     }
 
     return connection.MySQLConnection(**config)
+
+
+def main():
+    db = get_db()
+
+    cursor = db.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM users;')
+    for user in cursor:
+        user = ';'.join([f"{k}='{v}'" for k, v in user.items()])
+        log_record = logging.LogRecord(
+            "user_data", logging.INFO,
+            None, None, user, None,
+            None
+        )
+        formatter = RedactingFormatter(fields=(
+            "name", "email", "phone", "ssn", "password",
+        ))
+        print(formatter.format(log_record))
+
+
+main()
